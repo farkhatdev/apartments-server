@@ -6,18 +6,17 @@ const { verifyToken } = require("../../middlewares/authMiddleware");
 
 const serviceAccount = require("../../utils/apartments-d014c-firebase-adminsdk-k88eo-e80f604b04.json");
 const { Apartments } = require("../../model/schema");
-const { verify } = require("jsonwebtoken");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
-  databaseURL: process.env.databaseURL,
+  databaseURL: process.env.DATABASE_URL,
   storageBucket: process.env.STOREAGE_BUCKET,
 });
 const bucket = admin.storage().bucket();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-route.get("/", async (req, res) => {
+route.get("/", verifyToken,  async (req, res) => {
   try {
     const allApartments = await Apartments.find({ isArchived: false });
     return res
