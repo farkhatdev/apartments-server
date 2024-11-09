@@ -29,7 +29,7 @@ route.get("/", verifyToken, async (req, res) => {
   }
 });
 
-route.post("/", verifyToken, upload.array("images", 6), async (req, res) => {
+route.post("/", upload.array("images", 6), async (req, res) => {
   try {
     const uploadedFiles = [];
     const files = req.files;
