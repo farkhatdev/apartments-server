@@ -16,9 +16,11 @@ const bucket = admin.storage().bucket();
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-route.get("/", verifyToken,  async (req, res) => {
+route.get("/", verifyToken, async (req, res) => {
   try {
-    const allApartments = await Apartments.find({ isArchived: false });
+    const allApartments = await Apartments.find({ isArchived: false }).sort({
+      _id: -1,
+    });
     return res
       .status(200)
       .json({ message: "All apartments there", data: allApartments });
@@ -48,6 +50,7 @@ route.post("/", verifyToken, upload.array("images", 6), async (req, res) => {
         },
       });
       blobStream.on("error", (error) => {
+        console.log(error);
         res.status(500).json({ message: "Error during file uploading" });
       });
       blobStream.on("finish", () => {

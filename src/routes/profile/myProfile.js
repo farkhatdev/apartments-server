@@ -8,7 +8,9 @@ route.get("/", verifyToken, async (req, res) => {
   try {
     const user = req.user;
     const { phone } = user;
-    const allApartments = await Apartments.find({ owner: phone });
+    const allApartments = await Apartments.find({ owner: phone }).sort({
+      _id: -1,
+    });
 
     return res
       .status(200)
