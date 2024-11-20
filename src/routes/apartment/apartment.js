@@ -4,7 +4,7 @@ const multer = require("multer");
 const admin = require("firebase-admin");
 const { verifyToken } = require("../../middlewares/authMiddleware");
 
-const serviceAccount = require("../../utils/serviceAccountKey.json");
+const serviceAccount = require("../../utils/serviceAccount.json");
 const { Apartments } = require("../../model/schema");
 
 admin.initializeApp({
