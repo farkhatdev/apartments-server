@@ -4,7 +4,7 @@ const multer = require("multer");
 const admin = require("firebase-admin");
 const { verifyToken } = require("../../middlewares/authMiddleware");
 
-const serviceAccount = require("../../utils/apartments-d014c-firebase-adminsdk-k88eo-e80f604b04.json");
+const serviceAccount = require("../../utils/serviceAccountKey.json");
 const { Apartments } = require("../../model/schema");
 
 admin.initializeApp({
@@ -29,30 +29,23 @@ route.get("/", verifyToken, async (req, res) => {
   }
 });
 
-route.post("/", upload.array("images", 6), async (req, res) => {
+route.post("/", verifyToken, upload.array("images", 6), async (req, res) => {
   try {
-    const uploadedFiles = [];
     const files = req.files;
+    const owner = req.user.phone;
+    const ownerName = req.user.name;
     const apartmentInfo = JSON.parse(req.body.info);
+    const apartmentId = Date.now();
+    const uploadedFiles = [];
 
-    const ID = Date.now();
-
-    let { phone, name } = req.user;
-
-    phone = Number(phone);
-
-    files.map(async (file) => {
-      const blob = bucket.file(`${Number(phone)}/${ID}-${file.originalname}`);
-
+    for (const file of files) {
+      const blob = bucket.file(`${owner}/${apartmentId}-${file.originalname}`);
       const blobStream = blob.createWriteStream({
         metadata: {
           contentType: file.mimetype,
         },
       });
-      blobStream.on("error", (error) => {
-        console.log(error);
-        res.status(500).json({ message: "Error during file uploading" });
-      });
+
       blobStream.on("finish", () => {
         blob.makePublic();
         const publicURL = `https://storage.googleapis.com/${bucket.name}/${blob.name}`;
@@ -61,9 +54,9 @@ route.post("/", upload.array("images", 6), async (req, res) => {
           const saveInfo = async () => {
             await Apartments.create({
               ...apartmentInfo,
-              id: ID,
-              owner: phone,
-              name,
+              id: apartmentId,
+              owner,
+              name: ownerName,
               isArchived: false,
               images: uploadedFiles,
             });
@@ -73,9 +66,9 @@ route.post("/", upload.array("images", 6), async (req, res) => {
         }
       });
       blobStream.end(file.buffer);
-    });
+    }
   } catch (error) {
-    res.status(500).json({ message: "Something went wrong" });
+    return res.status(500).json({ message: "Error during file uploading" });
   }
 });
 

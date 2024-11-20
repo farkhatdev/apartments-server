@@ -19,19 +19,32 @@ const myProfileRoute = require("./src/routes/profile/myProfile.js");
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/uploads", express.static("uploads"));
 app.use("/auth/register", registerRoute);
 app.use("/auth/login", loginRoute);
 app.use("/auth/verify-code", verifyCodeRoute);
 app.use("/apartment", apartmentRoute);
 app.use("/my-profile", myProfileRoute);
 
-app.listen(PORT, () => {
+const connectToDatabase = async () => {
   try {
-    console.log("Server is running on", PORT);
-    mongoose
-      .connect(MONGODB_URL)
-      .then(() => console.log("Connected to MongoDB"));
+    await mongoose.connect(MONGODB_URL);
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.log(error);
+    console.error("Error connecting", error);
+    process.exit(1);
   }
-});
+};
+
+const startServer = async () => {
+  try {
+    await connectToDatabase();
+    app.listen(PORT, () => {
+      console.log("Server is running on", PORT);
+    });
+  } catch (error) {
+    console.error("Error starting", error);
+  }
+};
+
+startServer();
